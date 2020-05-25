@@ -65,19 +65,20 @@ class Skills(object):
 
     def set_skill_points(self):
 
-        def student_t(nu=1):  # nu equals number of degrees of freedom
-
-            x = random.gauss(0.0, 1.0)
-            y = 2.0 * random.gammavariate(0.5 * nu, 2.0)
-            return x / (math.sqrt(y / nu))
+        def student_t():
+            # See https://www.johndcook.com/python_student_t_rng.html for the original code.
+            # nu = 1
+            x = random.gauss(0, 1)
+            y = 2 * random.gammavariate(0.5, 2)
+            return x / (math.sqrt(y))
 
         def point_value():
 
-            value = int(student_t() + 5)
+            value = int(student_t() + 5.5)
             if value < 1:
                 value = 1
-            elif value > 9:
-                value = 9
+            elif value > 10:
+                value = 10
             return value
 
         key_skills = {'SOLO': 'Combat Sense', 'CORPORATE': 'Resources', 'MEDIA': 'Credibility', 'NOMAD': 'Family',
@@ -153,10 +154,10 @@ class Attributes(object):
             self.attributes[attribute] = self.roll_list.pop()
 
         run = self.attributes['MA'] * 9
-        self.attributes['Run'] = '{}m'.format(run)
-        self.attributes['Leap'] = '{}m'.format(run / 4)
+        self.attributes['Run'] = f'{run}m'
+        self.attributes['Leap'] = f'{int(run / 4)}m'
         kilos = self.attributes['BODY'] * 40
-        self.attributes['Lift'] = '{} kg/{} lbs'.format(kilos, int(kilos * 2.205))
+        self.attributes['Lift'] = f'{kilos} kg/{int(kilos * 2.205)} lbs'
         self.attributes['BTM'] = (0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 4)[self.attributes['BODY']]
 
         return
@@ -195,8 +196,8 @@ class Character(Skills, Attributes):
                 self.cybernetics.add(cyberoptics[optic_roll])
             elif roll == 1:
                 limit = float('inf')
-                cyberarm = ((aw['Med. Pistol'], 2), (aw['Light Pistol'], 0), (aw['Med. Pistol'], 2),
-                            (aw['Light SMG'], 2), (aw['V Hvy. Pistol'], 4), (aw['Hvy. Pistol'], 4))
+                cyberarm = ((aw['Med Pistol'], 2), (aw['Light Pistol'], 0), (aw['Med Pistol'], 2),
+                            (aw['Light SMG'], 2), (aw['V Hvy Pistol'], 4), (aw['Hvy Pistol'], 4))
                 while limit > self.attributes['BTM']:
                     arm_roll = random.randint(0, 5)
                     limit = cyberarm[arm_roll][1]
@@ -206,11 +207,12 @@ class Character(Skills, Attributes):
                 cyberaudio = ('Wearman', 'Radio Splice', 'Phone Link',
                               'Amplified Hearing', 'Sound Editing', 'Digital Recording Link')
                 self.cybernetics.add(cyberaudio[audio_roll])
-            elif roll < 9:
+            else:
                 cyberware = ('', '', '', aw['Big Knucks'], aw['Rippers'], aw['Vampires'], aw["Slice N' dice"],
-                             'Reflex Boost (Kerenzikov)', 'Reflex Boost (Sandevistan)')
+                             'Reflex Boost (Kerenzikov)', 'Reflex Boost (Sandevistan)', 'Nothing')
                 self.cybernetics.add(cyberware[roll])
 
+        self.cybernetics.remove('Nothing')
         self.cybernetics = list(self.cybernetics)
 
         return
@@ -228,14 +230,14 @@ class Character(Skills, Attributes):
 
         armor_weapon = (('Heavy Leather', aw['Knife']),
                         ('Armor Vest', aw['Light Pistol']),
-                        ('Light Armor Jacket', aw['Med. Pistol']),
-                        ('Light Armor Jacket', aw['Hvy. Pistol']),
-                        ('Med. Armor Jacket', aw['Hvy. Pistol']),
-                        ('Med. Armor Jacket', aw['Light SMG']),
-                        ('Med. Armor Jacket', aw['Light Assault Rifle']),
-                        ('Hvy. Armor Jacket', aw['Med. Assault Rifle']),
-                        ('Hvy. Armor Jacket', aw['Hvy. Assault Rifle']),
-                        ('MetalGear', aw['Hvy. Assault Rifle']))
+                        ('Light Armor Jacket', aw['Med Pistol']),
+                        ('Light Armor Jacket', aw['Hvy Pistol']),
+                        ('Med Armor Jacket', aw['Hvy Pistol']),
+                        ('Med Armor Jacket', aw['Light SMG']),
+                        ('Med Armor Jacket', aw['Light Assault Rifle']),
+                        ('Hvy Armor Jacket', aw['Med Assault Rifle']),
+                        ('Hvy Armor Jacket', aw['Hvy Assault Rifle']),
+                        ('MetalGear', aw['Hvy Assault Rifle']))
 
         armor_sp = (('Head: 0, Torso: 4, Arms: 4, Legs: 4', 0),
                     ('Head: 0, Torso: 10, Arms: 0, Legs: 0', 0),
@@ -248,7 +250,7 @@ class Character(Skills, Attributes):
                     ('Head: 0, Torso: 20, Arms: 20, Legs: 0', 2),
                     ('Head: 25, Torso: 25, Arms: 25, Legs: 25', 2))
 
-        self.armor = '{} SP: {}'.format(armor_weapon[roll][0], armor_sp[roll][0])
+        self.armor = f'{armor_weapon[roll][0]} SP: {armor_sp[roll][0]}'
         self.weapon = armor_weapon[roll][1]
         self.attributes['REF'] -= armor_sp[roll][1]
 
@@ -263,7 +265,7 @@ class Character(Skills, Attributes):
         for item in self.cybernetics:
             print('\t{}'.format(item))
         print('Attributes')
-        print('\tINT: {}\tREF: {}\tTECH: {}\tCOOL: {}\n\tATTR: {}\tMA: {}\tLUCK: {}\tBODY: {}\n\tEMP: {}' \
+        print('\tINT: {}\tREF: {}\tTECH: {}\tCOOL: {}\n\tATTR: {}\tMA: {}\tLUCK: {}\tBODY: {}\n\tEMP: {}'
               '\tRun: {}\tLeap: {}\tLift: {}'.format(self.attributes['INT'],
                                                      self.attributes['REF'],
                                                      self.attributes['TECH'],
@@ -303,21 +305,21 @@ aw = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
       'Light Pistol': random.choice(('BudgetArms C-13: P -1 P E 1d6(5mm) 8 2 ST',
                                      'Dai Lung Cybermag 15: P -1 P C 1d6+1(6mm) 10 2 UR',
                                      'Federated Arms X-22: P 0 J E 1d6+1(6mm) 10 2 ST')),
-      'Med. Pistol': random.choice(('Militech Arms Avenger: P 0 J E 2d6+1(9mm) 10 2 VR',
-                                    'Dai Lung Streetmaster: P 0 J E 2d6+3(10mm) 12 2 UR',
-                                    'Federated Arms X-9mm: P 0 J E 2d6+1(9mm) 12 2 ST')),
-      'Hvy. Pistol': random.choice(('BudgetArms Auto 3: P -1 J E 3d6(11mm) 8 2 UR',
-                                    'Sternmeyer Type 35: P 0 J C 3d6(11mm) 8 2 VR')),
+      'Med Pistol': random.choice(('Militech Arms Avenger: P 0 J E 2d6+1(9mm) 10 2 VR',
+                                   'Dai Lung Streetmaster: P 0 J E 2d6+3(10mm) 12 2 UR',
+                                   'Federated Arms X-9mm: P 0 J E 2d6+1(9mm) 12 2 ST')),
+      'Hvy Pistol': random.choice(('BudgetArms Auto 3: P -1 J E 3d6(11mm) 8 2 UR',
+                                   'Sternmeyer Type 35: P 0 J C 3d6(11mm) 8 2 VR')),
       'Light SMG': random.choice(('Uzi Miniauto 9: SMG +1 J E 2d6+1(9mm) 30 35 VR',
                                   'H&K MP-2013: SMG +1 J C 2d6+3(10mm) 35 32 ST',
                                   'Federated Arms Tech Assault II: SMG +1 j c 1D6(6MM) 50 25 ST')),
-      'V Hvy. Pistol': random.choice(('Armalite 44: P 0 J E 4d6+1(12mm) 8 1 ST',
-                                      'Colt AMT Model 2000: P 0 J C 4d6+1(12mm) 8 1 VR')),
+      'V Hvy Pistol': random.choice(('Armalite 44: P 0 J E 4d6+1(12mm) 8 1 ST',
+                                     'Colt AMT Model 2000: P 0 J C 4d6+1(12mm) 8 1 VR')),
       'Light Assault Rifle': 'Militech Ronin Light Assault: RIF +1 N C 5d6(5.56) 35 30 VR',
-      'Med. Assault Rifle': 'AKR-20 Medium Assault: RIF 0 N C 5d6(5.56) 30 30 ST',
-      'Hvy. Assault Rifle': random.choice(('FN-RAL Heavy Assault Rifle: RIF -1 N C 6d6+2(7.62) 30 30 VR',
-                                           'Kalishnikov A-80 Hvy. Assault Rifle: '
-                                           'RIF -1 N E 6d6+2(7.62) 35 25 ST'))}
+      'Med Assault Rifle': 'AKR-20 Medium Assault: RIF 0 N C 5d6(5.56) 30 30 ST',
+      'Hvy Assault Rifle': random.choice(('FN-RAL Heavy Assault Rifle: RIF -1 N C 6d6+2(7.62) 30 30 VR',
+                                          'Kalishnikov A-80 Hvy. Assault Rifle: '
+                                          'RIF -1 N E 6d6+2(7.62) 35 25 ST'))}
 
 if __name__ == '__main__':
 
