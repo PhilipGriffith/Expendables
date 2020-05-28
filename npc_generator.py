@@ -4,7 +4,7 @@ import random
 roles = ('SOLO', 'ROCKER', 'NETRUNNER', 'MEDIA', 'NOMAD', 'FIXER', 'COP', 'CORPORATE', 'TECHIE', 'MEDTECHIE')
 
 
-class Skills(object):
+class Skills:
 
     def __init__(self, role):
         super(Skills, self).__init__(role)
@@ -18,13 +18,13 @@ class Skills(object):
     def set_skills(self):
 
         if self.role == 'SOLO':
-            self.career_list = ['Handgun', 'Melee', 'Weapons Tech', 'Rifle', 'Athletics', 'Submachinegun', 'Stealth']
+            self.career_list = ['Handgun', 'Melee', ('Weaponsmith', 2), 'Rifle', 'Athletics', 'Submachinegun',
+                                ('Stealth', 2)]
             choice = random.choice(('Brawling', 'Martial Arts'))
             if choice == 'Martial Arts':
-                self.career_list.append('{}: {}'.format(choice, random.choice(('Aikido', 'Animal Kung Fu', 'Boxing',
-                                                                               'Capoeria', 'Choi Li Fut', 'Judo',
-                                                                               'Karate', 'Tae Kwon Do',
-                                                                               'Thai Kick Boxing' 'Wrestling'))))
+                martial_arts = (('Aikido', 3), ('Animal Kung Fu', 3), 'Boxing', ('Capoeria', 3), ('Choi Li Fut', 3),
+                                'Judo', ('Karate', 2), ('Tae Kwon Do', 3), ('Thai Kick Boxing', 4), 'Wrestling')
+                self.career_list.append('{}: {}'.format(choice, random.choice(martial_arts)))
             else:
                 self.career_list.append(choice)
         elif self.role == 'CORPORATE':
@@ -34,29 +34,30 @@ class Skills(object):
             self.career_list = ['Composition', 'Education', 'Persuasion', 'Human Perception',
                                 'Social', 'Streetwise', 'Photo & Film', 'Interview']
         elif self.role == 'NOMAD':
-            self.career_list = ['Endurance', 'Melee', 'Rifle', 'Drive', 'Basic Tech',
+            self.career_list = ['Endurance', 'Melee', 'Rifle', 'Drive', ('Basic Tech', 2),
                                 'Wilderness Survival', 'Brawling', 'Athletics']
         elif self.role == 'TECHIE':
-            self.career_list = ['Basic Tech', 'CyberTech', 'Teaching', 'Education', 'Electronics']
-            self.career_list.extend(random.sample(('Aero Tech', 'AV Tech', 'Cryotank Operation', 'Cyberdeck Design',
-                                                   'Demolitions', 'Disguise', 'Elect. Security', 'First Aid', 'Forgery',
-                                                   'Gyro Tech', 'Paint or Draw', 'Photo & Film', 'Pharmaceuticals',
-                                                   'Pick Lock', 'Pick Pocket', 'Play Instrument', 'Weaponsmith'), 3))
+            self.career_list = [('Basic Tech', 2), ('CyberTech', 2), 'Teaching', 'Education', 'Electronics']
+            tech_skills = (('Aero Tech', 2), ('AV Tech', 3), 'Cryotank Operation', ('Cyberdeck Design', 2),
+                           ('Demolitions', 2), 'Disguise', ('Elect. Security', 2), 'First Aid', 'Forgery',
+                           ('Gyro Tech', 3), 'Paint or Draw', 'Photo & Film', ('Pharmaceuticals', 2), 'Pick Lock',
+                           'Pick Pocket', 'Play Instrument', ('Weaponsmith', 2))
+            self.career_list.extend(random.sample(tech_skills, 3))
         elif self.role == 'COP':
-            self.career_list = ['Handgun', 'Human Perception', 'Athletics', 'Education', 'Brawling',
-                                'Melee', 'Interrogation', 'Streetwise']
+            self.career_list = ['Handgun', 'Human Perception', 'Athletics', 'Education', 'Brawling', 'Melee',
+                                'Interrogation', 'Streetwise']
         elif self.role == 'ROCKER':
-            self.career_list = ['Perform', 'Wardrobe & Style', 'Composition', 'Brawling',
-                                'Play Instrument', 'Streetwise', 'Persuasion', 'Seduction']
+            self.career_list = ['Perform', 'Wardrobe & Style', 'Composition', 'Brawling', 'Play Instrument',
+                                'Streetwise', 'Persuasion', 'Seduction']
         elif self.role == 'MEDTECHIE':
-            self.career_list = ['Basic Tech', 'Diagnose', 'Education', 'Cryotank Operation',
-                                'Library Search', 'Pharmaceuticals', 'Zoology', 'Human Perception']
+            self.career_list = [('Basic Tech', 2), 'Diagnose', 'Education', 'Cryotank Operation', 'Library Search',
+                                ('Pharmaceuticals', 2), 'Zoology', 'Human Perception']
         elif self.role == 'FIXER':
-            self.career_list = ['Forgery', 'Handgun', 'Brawling', 'Melee', 'Pick Lock', 'Pick Pocket',
-                                'Intimidate', 'Persuasion']
+            self.career_list = ['Forgery', 'Handgun', 'Brawling', 'Melee', 'Pick Lock', 'Pick Pocket', 'Intimidate',
+                                'Persuasion']
         else:  # self.role == 'NETRUNNER'
-            self.career_list = ['Basic Tech', 'Education', 'System Knowledge', 'CyberTech',
-                                'Cyberdeck Design', 'Composition', 'Electronics', 'Programming']
+            self.career_list = [('Basic Tech', 2), 'Education', 'System Knowledge', ('CyberTech', 2),
+                                ('Cyberdeck Design', 2), 'Composition', 'Electronics', 'Programming']
 
         self.career_list.append('Awareness/Notice')
         random.shuffle(self.career_list)
@@ -66,10 +67,9 @@ class Skills(object):
     def set_skill_points(self):
 
         def student_t():
-            # See https://www.johndcook.com/python_student_t_rng.html for the original code.
-            # nu = 1
-            x = random.gauss(0, 1)
-            y = 2 * random.gammavariate(0.5, 2)
+            # nu = 1: See https://www.johndcook.com/python_student_t_rng.html for the original code.
+            x = random.gauss(0.0, 1.0)
+            y = 2.0 * random.gammavariate(0.5, 2.0)
             return x / (math.sqrt(y))
 
         def point_value():
@@ -79,7 +79,19 @@ class Skills(object):
                 value = 1
             elif value > 10:
                 value = 10
-            return value
+            return value, value
+
+        def point_value_multiplier(ip, total_points):
+
+            if total_points == 0:
+                return 0, 0
+            points = float('inf')
+            while points > total_points:
+                value = round(random.expovariate(0.3))
+                if value > 9:
+                    value = 9
+                points = range(ip, 41, ip)[value]
+            return value + 1, points
 
         key_skills = {'SOLO': 'Combat Sense', 'CORPORATE': 'Resources', 'MEDIA': 'Credibility', 'NOMAD': 'Family',
                       'TECHIE': 'Jury Rig', 'COP': 'Authority', 'ROCKER': 'Charismatic Leadership',
@@ -87,14 +99,17 @@ class Skills(object):
 
         total_points = 40
         points = point_value()
-        self.skills[key_skills[self.role]] = points
-        total_points -= points
+        self.skills[key_skills[self.role]] = points[0]
+        total_points -= points[1]
 
         for skill in self.career_list:
-            points = point_value()
-            if points < total_points:
-                self.skills[skill] = points
-                total_points -= points
+            if isinstance(skill, tuple):
+                points = point_value_multiplier(skill[1], total_points)
+            else:
+                points = point_value()
+            if points[1] <= total_points:
+                self.skills[skill] = points[0]
+                total_points -= points[1]
             else:
                 self.skills[skill] = total_points
                 total_points = 0
@@ -104,7 +119,7 @@ class Skills(object):
         return
 
 
-class Attributes(object):
+class Attributes:
 
     def __init__(self, role):
         super(Attributes, self).__init__()
@@ -212,7 +227,7 @@ class Character(Skills, Attributes):
                              'Reflex Boost (Kerenzikov)', 'Reflex Boost (Sandevistan)', 'Nothing')
                 self.cybernetics.add(cyberware[roll])
 
-        self.cybernetics.remove('Nothing')
+        self.cybernetics.discard('Nothing')
         self.cybernetics = list(self.cybernetics)
 
         return
@@ -280,6 +295,7 @@ class Character(Skills, Attributes):
                                                      self.attributes['Lift']))
         print('Skills')
         for k, v in self.skills.items():
+            k = k[0] if isinstance(k, tuple) else k
             print('\t{}: {}'.format(k, v))
         print('-----------------------------------------------------------')
         return
@@ -322,5 +338,4 @@ aw = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
                                           'RIF -1 N E 6d6+2(7.62) 35 25 ST'))}
 
 if __name__ == '__main__':
-
     Characters(num=3)
