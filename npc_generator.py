@@ -6,16 +6,15 @@ roles = ('SOLO', 'ROCKER', 'NETRUNNER', 'MEDIA', 'NOMAD', 'FIXER', 'COP', 'CORPO
 
 class Skills:
 
-    def __init__(self, role):
-        super(Skills, self).__init__(role)
-        self.role = role
+    def __init__(self):
+        super().__init__()
         self.career_list = None
         self.skills = {}
 
-        self.set_skills()
-        self.set_skill_points()
+        self._set_skills()
+        self._set_skill_points()
 
-    def set_skills(self):
+    def _set_skills(self):
 
         if self.role == 'SOLO':
             self.career_list = ['Handgun', 'Melee', ('Weaponsmith', 2), 'Rifle', 'Athletics', 'Submachinegun',
@@ -64,7 +63,7 @@ class Skills:
 
         return
 
-    def set_skill_points(self):
+    def _set_skill_points(self):
 
         def student_t():
             # nu = 1: See https://www.johndcook.com/python_student_t_rng.html for the original code.
@@ -121,16 +120,16 @@ class Skills:
 
 class Attributes:
 
-    def __init__(self, role):
-        super(Attributes, self).__init__()
-        self.role = role
+    def __init__(self):
+        super().__init__()
         self.roll_list = []
         self.attributes = {'INT': 0, 'REF': 0, 'TECH': 0, 'COOL': 0, 'ATTR': 0, 'MA': 0, 'LUCK': 0, 'BODY': 0, 'EMP': 0}
 
-        self.create_attributes()
-        self.set_attributes()
+        self._create_attributes()
+        self._set_attributes()
+        self._set_reputation()
 
-    def create_attributes(self):
+    def _create_attributes(self):
 
         for att in range(9):
             roll = 11
@@ -140,7 +139,7 @@ class Attributes:
         self.roll_list.sort()
         return
 
-    def set_attributes(self):
+    def _set_attributes(self):
 
         if self.role == 'SOLO' or self.role == 'NOMAD':
             high = ['REF', 'COOL', 'BODY']
@@ -177,6 +176,15 @@ class Attributes:
 
         return
 
+    def _set_reputation(self):
+
+        value = round(random.expovariate(0.5)) + 1
+        if value > 10:
+            value = 10
+        if random.randint(1, 20) == 1:
+            value = -value
+        self.attributes['REP'] = value
+
 
 class Character(Skills, Attributes):
 
@@ -184,16 +192,22 @@ class Character(Skills, Attributes):
         if not role:
             role = random.choice(roles)
         self.role = role.upper()
-        super(Character, self).__init__(self.role)
+        super().__init__()
         self.armor = None
         self.weapon = None
         self.cybernetics = set()
+        self.damage = 0
 
-        self.set_cyberware()
-        self.set_armor_weapon()
+        self._set_cyberware()
+        self._set_armor_weapon()
         self.report()
 
-    def set_cyberware(self):
+    def facedown(self):
+
+        d10 = random.randint(1, 10)
+        return d10 + self.attributes['COOL'] + self.attributes['REP']
+
+    def _set_cyberware(self):
 
         if self.role == 'SOLO':
             total = 6
@@ -232,7 +246,7 @@ class Character(Skills, Attributes):
 
         return
 
-    def set_armor_weapon(self):
+    def _set_armor_weapon(self):
 
         roll = random.randint(0, 9)
         if self.role == 'NOMAD' or self.role == 'COP':
@@ -281,18 +295,19 @@ class Character(Skills, Attributes):
             print('\t{}'.format(item))
         print('Attributes')
         print('\tINT: {}\tREF: {}\tTECH: {}\tCOOL: {}\n\tATTR: {}\tMA: {}\tLUCK: {}\tBODY: {}\n\tEMP: {}'
-              '\tRun: {}\tLeap: {}\tLift: {}'.format(self.attributes['INT'],
-                                                     self.attributes['REF'],
-                                                     self.attributes['TECH'],
-                                                     self.attributes['COOL'],
-                                                     self.attributes['ATTR'],
-                                                     self.attributes['MA'],
-                                                     self.attributes['LUCK'],
-                                                     self.attributes['BODY'],
-                                                     self.attributes['EMP'],
-                                                     self.attributes['Run'],
-                                                     self.attributes['Leap'],
-                                                     self.attributes['Lift']))
+              '\t REP: {}\n\tRun: {}\tLeap: {}\tLift: {}'.format(self.attributes['INT'],
+                                                                 self.attributes['REF'],
+                                                                 self.attributes['TECH'],
+                                                                 self.attributes['COOL'],
+                                                                 self.attributes['ATTR'],
+                                                                 self.attributes['MA'],
+                                                                 self.attributes['LUCK'],
+                                                                 self.attributes['BODY'],
+                                                                 self.attributes['EMP'],
+                                                                 self.attributes['REP'],
+                                                                 self.attributes['Run'],
+                                                                 self.attributes['Leap'],
+                                                                 self.attributes['Lift']))
         print('Skills')
         for k, v in self.skills.items():
             k = k[0] if isinstance(k, tuple) else k
