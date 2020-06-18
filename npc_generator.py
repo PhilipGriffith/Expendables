@@ -207,6 +207,19 @@ class Character(Skills, Attributes):
         d10 = random.randint(1, 10)
         return d10 + self.attributes['COOL'] + self.attributes['REP']
 
+    def initiative(self):
+
+        d10 = random.randint(1, 10)
+        try:
+            booster = [item.lstrip('Reflex Boost ') for item in self.cybernetics if item.startswith('Reflex')][0]
+            if booster == '(Kerenzikov)':
+                boost = random.randint(1, 2)
+            elif booster == '(Sandevistan)':
+                boost = 3
+        except IndexError:
+            boost = 0
+        return d10 + self.attributes['REF'] + boost
+
     def _set_cyberware(self):
 
         if self.role == 'SOLO':
