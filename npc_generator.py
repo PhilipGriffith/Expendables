@@ -239,7 +239,10 @@ class Character(Skills, Attributes):
             else:
                 cyberware = ('', '', '', aw['Big Knucks'], aw['Rippers'], aw['Vampires'], aw["Slice N' dice"],
                              'Reflex Boost (Kerenzikov)', 'Reflex Boost (Sandevistan)', 'Nothing')
-                self.cybernetics.add(cyberware[roll])
+                if roll in (7, 8) and (cyberware[7] in self.cybernetics or cyberware[8] in self.cybernetics):
+                    continue
+                else:
+                    self.cybernetics.add(cyberware[roll])
 
         self.cybernetics.discard('Nothing')
         self.cybernetics = list(self.cybernetics)
@@ -353,4 +356,4 @@ aw = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
                                           'RIF -1 N E 6d6+2(7.62) 35 25 ST'))}
 
 if __name__ == '__main__':
-    Characters(num=3)
+    Characters(num=3, role='sOLO')
