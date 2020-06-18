@@ -218,6 +218,8 @@ class Character(Skills, Attributes):
                 boost = 3
         except IndexError:
             boost = 0
+        if self.role == 'SOLO':
+            boost += self.skills['Combat Sense']
         return d10 + self.attributes['REF'] + boost
 
     def _set_cyberware(self):
