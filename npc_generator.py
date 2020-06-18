@@ -211,11 +211,7 @@ class Character(Skills, Attributes):
 
         d10 = random.randint(1, 10)
         try:
-            booster = [item.lstrip('Reflex Boost ') for item in self.cybernetics if item.startswith('Reflex')][0]
-            if booster == '(Kerenzikov)':
-                boost = random.randint(1, 2)
-            elif booster == '(Sandevistan)':
-                boost = 3
+            boost = int([item[-1] for item in self.cybernetics if item.startswith('Reflex')][0])
         except IndexError:
             boost = 0
         if self.role == 'SOLO':
@@ -253,7 +249,8 @@ class Character(Skills, Attributes):
                 self.cybernetics.add(cyberaudio[audio_roll])
             else:
                 cyberware = ('', '', '', aw['Big Knucks'], aw['Rippers'], aw['Vampires'], aw["Slice N' dice"],
-                             'Reflex Boost (Kerenzikov)', 'Reflex Boost (Sandevistan)', 'Nothing')
+                             f'Reflex Boost (Kerenzikov) +X', 'Reflex Boost (Sandevistan) +3',
+                             'Nothing')
                 if roll in (7, 8) and (cyberware[7] in self.cybernetics or cyberware[8] in self.cybernetics):
                     continue
                 else:
@@ -261,7 +258,7 @@ class Character(Skills, Attributes):
 
         self.cybernetics.discard('Nothing')
         self.cybernetics = list(self.cybernetics)
-
+        self.cybernetics = [item.replace('X', str(random.randint(1, 2))) for item in self.cybernetics]
         return
 
     def _set_armor_weapon(self):
