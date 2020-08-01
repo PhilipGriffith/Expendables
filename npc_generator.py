@@ -59,8 +59,6 @@ class Skills:
         self.career_list.append('Awareness/Notice')
         random.shuffle(self.career_list)
 
-        return
-
     def _set_skill_points(self):
 
         def student_t():
@@ -113,8 +111,6 @@ class Skills:
         if total_points > 0:
             self.skills[self.career_list[-1]] += total_points
 
-        return
-
 
 class Attributes:
 
@@ -129,7 +125,7 @@ class Attributes:
 
     def _create_attributes(self):
 
-        for att in range(9):
+        for attribute in range(9):
             roll = 11
             while roll > 10:
                 roll = random.randint(1, 6) + random.randint(1, 6)
@@ -172,8 +168,6 @@ class Attributes:
         self.attributes['Lift'] = f'{kilos} kg/{int(kilos * 2.205)} lbs'
         self.attributes['BTM'] = (0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 4)[self.attributes['BODY']]
 
-        return
-
     def _set_reputation(self):
 
         value = round(random.expovariate(0.5)) + 1
@@ -187,13 +181,12 @@ class Attributes:
 class Character(Skills, Attributes):
 
     def __init__(self, role=None):
-        self.roles = ('SOLO', 'ROCKER', 'NETRUNNER', 'MEDIA', 'NOMAD', 'FIXER', 'COP', 'CORPORATE', 'TECHIE',
-                      'MEDTECHIE')
+        roles = ('SOLO', 'ROCKER', 'NETRUNNER', 'MEDIA', 'NOMAD', 'FIXER', 'COP', 'CORPORATE', 'TECHIE', 'MEDTECHIE')
         if not role:
-            role = random.choice(self.roles)
+            role = random.choice(roles)
         self.role = role.upper()
         super().__init__()
-        self.armor = None
+        self.armor = {}
         self.weapon = None
         self.cybernetics = set()
         self.damage = 0
@@ -229,18 +222,15 @@ class Character(Skills, Attributes):
             total = 3
 
         while len(self.cybernetics) < total:
-
             roll = random.randint(0, 9)
-
             if roll == 0:
                 optic_roll = random.randint(0, 5)
-                cyberoptics = ('Infrared', 'Lowlight', 'Camera', 'Dartgun',
-                               'Antidazzle', 'Targeting Scope')
+                cyberoptics = ('Infrared', 'Lowlight', 'Camera', 'Dartgun', 'Antidazzle', 'Targeting Scope')
                 self.cybernetics.add(cyberoptics[optic_roll])
             elif roll == 1:
                 limit = float('inf')
-                cyberarm = ((aw['Med Pistol'], 2), (aw['Light Pistol'], 0), (aw['Med Pistol'], 2),
-                            (aw['Light SMG'], 2), (aw['V Hvy Pistol'], 4), (aw['Hvy Pistol'], 4))
+                cyberarm = ((weapons['Med Pistol'], 2), (weapons['Light Pistol'], 0), (weapons['Med Pistol'], 2),
+                            (weapons['Light SMG'], 2), (weapons['V Hvy Pistol'], 4), (weapons['Hvy Pistol'], 4))
                 while limit > self.attributes['BTM']:
                     arm_roll = random.randint(0, 5)
                     limit = cyberarm[arm_roll][1]
@@ -251,8 +241,8 @@ class Character(Skills, Attributes):
                               'Amplified Hearing', 'Sound Editing', 'Digital Recording Link')
                 self.cybernetics.add(cyberaudio[audio_roll])
             else:
-                cyberware = ('', '', '', aw['Big Knucks'], aw['Rippers'], aw['Vampires'], aw["Slice N' dice"],
-                             f'Reflex Boost (Kerenzikov) +X', 'Reflex Boost (Sandevistan) +3',
+                cyberware = ('', '', '', weapons['Big Knucks'], weapons['Rippers'], weapons['Vampires'],
+                             weapons["Slice N' dice"], 'Reflex Boost (Kerenzikov) +X', 'Reflex Boost (Sandevistan) +3',
                              'Nothing')
                 if roll in (7, 8) and (cyberware[7] in self.cybernetics or cyberware[8] in self.cybernetics):
                     continue
@@ -271,37 +261,34 @@ class Character(Skills, Attributes):
             roll += 2
         elif self.role == 'SOLO':
             roll += 3
-
         if roll > 9:
             roll = 9
 
-        armor_weapon = (('Heavy Leather', aw['Knife']),
-                        ('Armor Vest', aw['Light Pistol']),
-                        ('Light Armor Jacket', aw['Med Pistol']),
-                        ('Light Armor Jacket', aw['Hvy Pistol']),
-                        ('Med Armor Jacket', aw['Hvy Pistol']),
-                        ('Med Armor Jacket', aw['Light SMG']),
-                        ('Med Armor Jacket', aw['Light Assault Rifle']),
-                        ('Hvy Armor Jacket', aw['Med Assault Rifle']),
-                        ('Hvy Armor Jacket', aw['Hvy Assault Rifle']),
-                        ('MetalGear', aw['Hvy Assault Rifle']))
+        weapon = (weapons['Knife'],
+                  weapons['Light Pistol'],
+                  weapons['Med Pistol'],
+                  weapons['Hvy Pistol'],
+                  weapons['Hvy Pistol'],
+                  weapons['Light SMG'],
+                  weapons['Light Assault Rifle'],
+                  weapons['Med Assault Rifle'],
+                  weapons['Hvy Assault Rifle'],
+                  weapons['Hvy Assault Rifle'])
 
-        armor_sp = (('Head: 0, Torso: 4, Arms: 4, Legs: 4', 0),
-                    ('Head: 0, Torso: 10, Arms: 0, Legs: 0', 0),
-                    ('Head: 0, Torso: 14, Arms: 14, Legs: 0', 0),
-                    ('Head: 0, Torso: 14, Arms: 14, Legs: 0', 0),
-                    ('Head: 0, Torso: 18, Arms: 18, Legs: 0', 1),
-                    ('Head: 0, Torso: 18, Arms: 18, Legs: 0', 1),
-                    ('Head: 0, Torso: 18, Arms: 18, Legs: 0', 1),
-                    ('Head: 0, Torso: 20, Arms: 20, Legs: 0', 2),
-                    ('Head: 0, Torso: 20, Arms: 20, Legs: 0', 2),
-                    ('Head: 25, Torso: 25, Arms: 25, Legs: 25', 2))
+        armor = ({'Name': 'Heavy Leather', 'Head': 0, 'Torso': 4, 'Arms': 4, 'Legs': 4, 'EV': 0},
+                 {'Name': 'Armor Vest', 'Head': 0, 'Torso': 10, 'Arms': 0, 'Legs': 0, 'EV': 0},
+                 {'Name': 'Light Armor Jacket', 'Head': 0, 'Torso': 14, 'Arms': 14, 'Legs': 0, 'EV': 0},
+                 {'Name': 'Light Armor Jacket', 'Head': 0, 'Torso': 14, 'Arms': 14, 'Legs': 0, 'EV': 0},
+                 {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'Arms': 18, 'Legs': 0, 'EV': 1},
+                 {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'Arms': 18, 'Legs': 0, 'EV': 1},
+                 {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'Arms': 18, 'Legs': 0, 'EV': 1},
+                 {'Name': 'Hvy Armor Jacket', 'Head': 0, 'Torso': 20, 'Arms': 20, 'Legs': 0, 'EV': 2},
+                 {'Name': 'Hvy Armor Jacket', 'Head': 0, 'Torso': 20, 'Arms': 20, 'Legs': 0, 'EV': 2},
+                 {'Name': 'MetalGear', 'Head': 25, 'Torso': 25, 'Arms': 25, 'Legs': 25, 'EV': 2})
 
-        self.armor = f'{armor_weapon[roll][0]} SP: {armor_sp[roll][0]}'
-        self.weapon = armor_weapon[roll][1]
-        self.attributes['REF'] -= armor_sp[roll][1]
-
-        return
+        self.armor = armor[roll]
+        self.attributes['REF'] -= self.armor['EV']
+        self.weapon = weapon[roll]
 
     def report(self):
 
@@ -346,29 +333,29 @@ class Characters(object):
         return
 
 
-aw = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
-      'Big Knucks': 'Big Knucks: Melee 1d6+2 1m',
-      "Slice N' dice": "Slice N' dice: Melee 2d6 Mono",
-      'Rippers': 'Rippers: Melee 1d6+3 AP',
-      'Vampires': 'Vampires: Melee 1d6/3',
-      'Light Pistol': random.choice(('BudgetArms C-13: P -1 P E 1d6(5mm) 8 2 ST',
-                                     'Dai Lung Cybermag 15: P -1 P C 1d6+1(6mm) 10 2 UR',
-                                     'Federated Arms X-22: P 0 J E 1d6+1(6mm) 10 2 ST')),
-      'Med Pistol': random.choice(('Militech Arms Avenger: P 0 J E 2d6+1(9mm) 10 2 VR',
-                                   'Dai Lung Streetmaster: P 0 J E 2d6+3(10mm) 12 2 UR',
-                                   'Federated Arms X-9mm: P 0 J E 2d6+1(9mm) 12 2 ST')),
-      'Hvy Pistol': random.choice(('BudgetArms Auto 3: P -1 J E 3d6(11mm) 8 2 UR',
-                                   'Sternmeyer Type 35: P 0 J C 3d6(11mm) 8 2 VR')),
-      'Light SMG': random.choice(('Uzi Miniauto 9: SMG +1 J E 2d6+1(9mm) 30 35 VR',
-                                  'H&K MP-2013: SMG +1 J C 2d6+3(10mm) 35 32 ST',
-                                  'Federated Arms Tech Assault II: SMG +1 j c 1D6(6MM) 50 25 ST')),
-      'V Hvy Pistol': random.choice(('Armalite 44: P 0 J E 4d6+1(12mm) 8 1 ST',
-                                     'Colt AMT Model 2000: P 0 J C 4d6+1(12mm) 8 1 VR')),
-      'Light Assault Rifle': 'Militech Ronin Light Assault: RIF +1 N C 5d6(5.56) 35 30 VR',
-      'Med Assault Rifle': 'AKR-20 Medium Assault: RIF 0 N C 5d6(5.56) 30 30 ST',
-      'Hvy Assault Rifle': random.choice(('FN-RAL Heavy Assault Rifle: RIF -1 N C 6d6+2(7.62) 30 30 VR',
-                                          'Kalishnikov A-80 Hvy. Assault Rifle: '
-                                          'RIF -1 N E 6d6+2(7.62) 35 25 ST'))}
+weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
+           'Big Knucks': 'Big Knucks: Melee 1d6+2 1m',
+           "Slice N' dice": "Slice N' dice: Melee 2d6 Mono",
+           'Rippers': 'Rippers: Melee 1d6+3 AP',
+           'Vampires': 'Vampires: Melee 1d6/3',
+           'Light Pistol': random.choice(('BudgetArms C-13: P -1 P E 1d6(5mm) 8 2 ST',
+                                          'Dai Lung Cybermag 15: P -1 P C 1d6+1(6mm) 10 2 UR',
+                                          'Federated Arms X-22: P 0 J E 1d6+1(6mm) 10 2 ST')),
+           'Med Pistol': random.choice(('Militech Arms Avenger: P 0 J E 2d6+1(9mm) 10 2 VR',
+                                        'Dai Lung Streetmaster: P 0 J E 2d6+3(10mm) 12 2 UR',
+                                        'Federated Arms X-9mm: P 0 J E 2d6+1(9mm) 12 2 ST')),
+           'Hvy Pistol': random.choice(('BudgetArms Auto 3: P -1 J E 3d6(11mm) 8 2 UR',
+                                        'Sternmeyer Type 35: P 0 J C 3d6(11mm) 8 2 VR')),
+           'Light SMG': random.choice(('Uzi Miniauto 9: SMG +1 J E 2d6+1(9mm) 30 35 VR',
+                                       'H&K MP-2013: SMG +1 J C 2d6+3(10mm) 35 32 ST',
+                                       'Federated Arms Tech Assault II: SMG +1 j c 1D6(6MM) 50 25 ST')),
+           'V Hvy Pistol': random.choice(('Armalite 44: P 0 J E 4d6+1(12mm) 8 1 ST',
+                                          'Colt AMT Model 2000: P 0 J C 4d6+1(12mm) 8 1 VR')),
+           'Light Assault Rifle': 'Militech Ronin Light Assault: RIF +1 N C 5d6(5.56) 35 30 VR',
+           'Med Assault Rifle': 'AKR-20 Medium Assault: RIF 0 N C 5d6(5.56) 30 30 ST',
+           'Hvy Assault Rifle': random.choice(('FN-RAL Heavy Assault Rifle: RIF -1 N C 6d6+2(7.62) 30 30 VR',
+                                               'Kalishnikov A-80 Hvy. Assault Rifle: '
+                                               'RIF -1 N E 6d6+2(7.62) 35 25 ST'))}
 
 if __name__ == '__main__':
     Characters(num=30, role='SOLO')
