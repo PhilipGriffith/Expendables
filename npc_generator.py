@@ -1,8 +1,6 @@
 import math
 import random
 
-roles = ('SOLO', 'ROCKER', 'NETRUNNER', 'MEDIA', 'NOMAD', 'FIXER', 'COP', 'CORPORATE', 'TECHIE', 'MEDTECHIE')
-
 
 class Skills:
 
@@ -189,8 +187,10 @@ class Attributes:
 class Character(Skills, Attributes):
 
     def __init__(self, role=None):
+        self.roles = ('SOLO', 'ROCKER', 'NETRUNNER', 'MEDIA', 'NOMAD', 'FIXER', 'COP', 'CORPORATE', 'TECHIE',
+                      'MEDTECHIE')
         if not role:
-            role = random.choice(roles)
+            role = random.choice(self.roles)
         self.role = role.upper()
         super().__init__()
         self.armor = None
@@ -217,6 +217,9 @@ class Character(Skills, Attributes):
         if self.role == 'SOLO':
             boost += self.skills['Combat Sense']
         return d10 + self.attributes['REF'] + boost
+
+    def damage(self, value, location):
+        pass
 
     def _set_cyberware(self):
 
@@ -368,4 +371,4 @@ aw = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
                                           'RIF -1 N E 6d6+2(7.62) 35 25 ST'))}
 
 if __name__ == '__main__':
-    Characters(num=3, role='sOLO')
+    Characters(num=30, role='SOLO')
