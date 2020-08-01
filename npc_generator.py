@@ -190,6 +190,7 @@ class Character(Skills, Attributes):
         self.weapon = None
         self.cybernetics = set()
         self.damage = 0
+        self.fastdraw = False
 
         self._set_cyberware()
         self._set_armor_weapon()
@@ -202,6 +203,7 @@ class Character(Skills, Attributes):
 
     def initiative(self):
 
+        self.fastdraw = False
         d10 = random.randint(1, 10)
         try:
             boost = int([item[-1] for item in self.cybernetics if item.startswith('Reflex')][0])
@@ -209,7 +211,11 @@ class Character(Skills, Attributes):
             boost = 0
         if self.role == 'SOLO':
             boost += self.skills['Combat Sense']
-        return d10 + self.attributes['REF'] + boost
+        total = d10 + self.attributes['REF'] + boost
+        if total < 11 and random.randint(0, 1) == 1:
+            self.fastdraw = True
+            total += 3
+        return total
 
     def damage(self, value, location):
         pass
