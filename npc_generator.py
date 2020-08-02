@@ -190,6 +190,7 @@ class Character(Skills, Attributes):
         self.weapon = None
         self.cybernetics = set()
         self.damage = 0
+        self.wound = None
         self.fastdraw = False
 
         self._set_cyberware()
@@ -212,13 +213,87 @@ class Character(Skills, Attributes):
         if self.role == 'SOLO':
             boost += self.skills['Combat Sense']
         total = d10 + self.attributes['REF'] + boost
-        if total < 11 and random.randint(0, 1) == 1:
+        if total < 11 and (random.random() * 10 <= self.attribute['INT']):
             self.fastdraw = True
             total += 3
         return total
 
-    def damage(self, value, location):
+    def damage(self, value, roll, ap=False):
+        location = ('', 'Head', 'Torso', 'Torso', 'Torso', 'R. Arm', 'L. Arm', 'R. Leg', 'R. Leg', 'L. Leg', 'L. Leg')[roll]
+        if ap:
+            value -= int(self.armor[location] / 2)
+            value = int(value / 2)
+        else:
+            value -= self.armor[location]
+        if value > 0:
+            self.armor[location] -= 1
+            value -= self.attributes['BTM']
+            if value < 1:
+                value = 1
+            if location == 'Head':
+                value *= 2
+            self._take_wound(value, roll)
+
+    def _take_wound(self, damage, roll):
+
+        if damage > 8:
+            if roll == 1:
+                self._death()
+            elif roll > 4:
+                self._death_save(0)
+        self.damage += damage
+        if self.samage < 5:
+            self._stun_save(0)
+        elif 4 < self.damage < 9:
+            if self.wound != 'Serious':
+                self.wound = 'Serious'
+                self.attributes['REF'] -= 2
+            self._stun_save(1)
+        elif 8 < self.damage < 13:
+            if self.wound == 'Serious':
+                self.attributes['REF'] += 2
+            if self.wound != 'Critical':
+                self.wound = 'Critical'
+                for attribute in ('REF', 'INT', 'COOL'):
+                    self.attributes[attribute] = round(self.attributes[attribute] / 2)
+            self._stun_save(2)
+        elif 12 < self.damage:
+            if self.wound == 'Serious':
+                self.attributes['REF'] += 2
+            elif self.wound == 'Critical':
+                for attribute in ('REF', 'INT', 'COOL'):
+                    self.attributes[attribute] *= 2
+            if self.wound != 'Mortal':
+                self.wound = 'Mortal'
+                for attribute in ('REF', 'INT', 'COOL'):
+                    self.attributes[attribute] = round(self.attributes[attribute] / 3)
+            if 12 < self.damage < 17:
+                stun, mortal = 3, 0
+            elif 16 < self.damage < 21:
+                stun, mortal = 4, 1
+            elif 20 < self.damage < 25:
+                stun, mortal = 5, 2
+            elif 24 < self.damage < 29:
+                stun, mortal = 6, 3
+            elif 28 < self.damage < 33:
+                stun, mortal = 7, 4
+            elif 32 < self.damage < 37:
+                stun, mortal = 8, 5
+            elif 36 < self.damage < 41:
+                stun, mortal = 9, 6
+            else:
+                self._death()
+            self._stun_save(stun)
+            self._death_save(mortal)
+
+    def _stun_save(self, stun):
         pass
+
+    def _death_save(self, mortal):
+        pass
+
+    def _death(self):
+        return
 
     def _set_cyberware(self):
 
@@ -281,16 +356,25 @@ class Character(Skills, Attributes):
                   weapons['Hvy Assault Rifle'],
                   weapons['Hvy Assault Rifle'])
 
-        armor = ({'Name': 'Heavy Leather', 'Head': 0, 'Torso': 4, 'Arms': 4, 'Legs': 4, 'EV': 0},
-                 {'Name': 'Armor Vest', 'Head': 0, 'Torso': 10, 'Arms': 0, 'Legs': 0, 'EV': 0},
-                 {'Name': 'Light Armor Jacket', 'Head': 0, 'Torso': 14, 'Arms': 14, 'Legs': 0, 'EV': 0},
-                 {'Name': 'Light Armor Jacket', 'Head': 0, 'Torso': 14, 'Arms': 14, 'Legs': 0, 'EV': 0},
-                 {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'Arms': 18, 'Legs': 0, 'EV': 1},
-                 {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'Arms': 18, 'Legs': 0, 'EV': 1},
-                 {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'Arms': 18, 'Legs': 0, 'EV': 1},
-                 {'Name': 'Hvy Armor Jacket', 'Head': 0, 'Torso': 20, 'Arms': 20, 'Legs': 0, 'EV': 2},
-                 {'Name': 'Hvy Armor Jacket', 'Head': 0, 'Torso': 20, 'Arms': 20, 'Legs': 0, 'EV': 2},
-                 {'Name': 'MetalGear', 'Head': 25, 'Torso': 25, 'Arms': 25, 'Legs': 25, 'EV': 2})
+        armor = (
+            {'Name': 'Heavy Leather', 'Head': 0, 'Torso': 4, 'R. Arm': 4, 'L. Arm': 4, 'R. Leg': 4, 'L. Leg': 4, 'EV': 0},
+            {'Name': 'Armor Vest', 'Head': 0, 'Torso': 10, 'R. Arm': 0, 'L. Arm': 0, 'R. Leg': 0, 'L. Leg': 0, 'EV': 0},
+            {'Name': 'Light Armor Jacket', 'Head': 0, 'Torso': 14, 'R. Arm': 14, 'L. Arm': 14, 'R. Leg': 0, 'L. Leg': 0,
+             'EV': 0},
+            {'Name': 'Light Armor Jacket', 'Head': 0, 'Torso': 14, 'R. Arm': 14, 'L. Arm': 14, 'R. Leg': 0, 'L. Leg': 0,
+             'EV': 0},
+            {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'R. Arm': 18, 'L. Arm': 18, 'R. Leg': 0, 'L. Leg': 0,
+             'EV': 1},
+            {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'R. Arm': 18, 'L. Arm': 18, 'R. Leg': 0, 'L. Leg': 0,
+             'EV': 1},
+            {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'R. Arm': 18, 'L. Arm': 18, 'R. Leg': 0, 'L. Leg': 0,
+             'EV': 1},
+            {'Name': 'Hvy Armor Jacket', 'Head': 0, 'Torso': 20, 'R. Arm': 20, 'L. Arm': 20, 'R. Leg': 0, 'L. Leg': 0,
+             'EV': 2},
+            {'Name': 'Hvy Armor Jacket', 'Head': 0, 'Torso': 20, 'R. Arm': 20, 'L. Arm': 20, 'R. Leg': 0, 'L. Leg': 0,
+             'EV': 2},
+            {'Name': 'MetalGear', 'Head': 25, 'Torso': 25, 'R. Arm': 25, 'L. Arm': 25, 'R. Leg': 25, 'L. Leg': 25,
+             'EV': 2})
 
         self.armor = armor[roll]
         self.attributes['REF'] -= self.armor['EV']
