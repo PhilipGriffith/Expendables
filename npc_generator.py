@@ -13,7 +13,7 @@ class Skills:
         self._set_skill_points()
 
     def _set_skills(self):
-
+        # 44, Career Skills
         if self.role == 'SOLO':
             self.career_list = ['Handgun', 'Melee', ('Weaponsmith', 2), 'Rifle', 'Athletics', 'Submachinegun',
                                 ('Stealth', 2)]
@@ -68,16 +68,17 @@ class Skills:
             return x / (math.sqrt(y))
 
         def point_value():
-
+            # Add the random value (+ or -) to an average d10 roll
             value = int(student_t() + 5.5)
             if value < 1:
                 value = 1
             elif value > 10:
                 value = 10
+            # Without an IP multiplier, skill value = skill points spent
             return value, value
 
         def point_value_multiplier(ip, total_points):
-
+            # 53, IP Multipliers
             if total_points == 0:
                 return 0, 0
             points = float('inf')
@@ -86,6 +87,7 @@ class Skills:
                 if value > 9:
                     value = 9
                 points = range(ip, 41, ip)[value]
+            # Track both skill value and skill points spent to attain that value
             return value + 1, points
 
         key_skills = {'SOLO': 'Combat Sense', 'CORPORATE': 'Resources', 'MEDIA': 'Credibility', 'NOMAD': 'Family',
@@ -93,10 +95,11 @@ class Skills:
                       'MEDTECHIE': 'Medical Tech', 'FIXER': 'Streetdeal', 'NETRUNNER': 'Interface'}
 
         total_points = 40
+        # Key skill
         points = point_value()
         self.skills[key_skills[self.role]] = points[0]
         total_points -= points[1]
-
+        # All other skills
         for skill in self.career_list:
             if isinstance(skill, tuple):
                 points = point_value_multiplier(skill[1], total_points)
@@ -108,6 +111,8 @@ class Skills:
             else:
                 self.skills[skill] = total_points
                 total_points = 0
+        # Add remaining skill points to the final random skill
+        # TODO It is possible, though not likely, that the final skill will be > 10
         if total_points > 0:
             self.skills[self.career_list[-1]] += total_points
 
@@ -124,7 +129,7 @@ class Attributes:
         self._set_reputation()
 
     def _create_attributes(self):
-
+        # 30, Fast and Dirty Expendables
         for attribute in range(9):
             roll = 11
             while roll > 10:
@@ -134,7 +139,7 @@ class Attributes:
         return
 
     def _set_attributes(self):
-
+        # 26, Statistics
         if self.role == 'SOLO' or self.role == 'NOMAD':
             high = ['REF', 'COOL', 'BODY']
         elif self.role == 'ROCKER':
@@ -151,25 +156,28 @@ class Attributes:
             high = []
 
         attribute_list = ['INT', 'REF', 'TECH', 'COOL', 'ATTR', 'MA', 'LUCK', 'BODY', 'EMP']
-
+        # Apply the highest roll values to role-specific attributes
         random.shuffle(high)
         for attribute in high:
             attribute_list.remove(attribute)
             self.attributes[attribute] = self.roll_list.pop()
-
+        # Apply the remaining roll values to the remaining attributes
         random.shuffle(attribute_list)
         for attribute in attribute_list:
             self.attributes[attribute] = self.roll_list.pop()
-
+        # 26, Movement Allowance
         run = self.attributes['MA'] * 9
         self.attributes['Run'] = f'{run}m'
         self.attributes['Leap'] = f'{int(run / 4)}m'
-        kilos = self.attributes['BODY'] * 40
-        self.attributes['Lift'] = f'{kilos} kg/{int(kilos * 2.205)} lbs'
+        # 29, Body Type
+        kilos = self.attributes['BODY'] * 10
+        self.attributes['Carry'] = f'{kilos} kg/{int(kilos * 2.205)} lbs'
+        self.attributes['Lift'] = f'{kilos * 4} kg/{int(kilos * 4 * 2.205)} lbs'
+        # 29, Body Type Modifier
         self.attributes['BTM'] = (0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 4)[self.attributes['BODY']]
 
     def _set_reputation(self):
-
+        # 54-55, Another Kind of Experience: Reputation
         value = round(random.expovariate(0.5)) + 1
         if value > 10:
             value = 10
@@ -189,8 +197,9 @@ class Character(Skills, Attributes):
         self.armor = {}
         self.weapon = None
         self.cybernetics = set()
-        self.damage = 0
-        self.wound = None
+        self.wounds = 0
+        self.wound_type = None
+        self.stunned = False
         self.fastdraw = False
 
         self._set_cyberware()
@@ -198,102 +207,133 @@ class Character(Skills, Attributes):
         self.report()
 
     def facedown(self):
-
+        # 55, Another Kind of Experience: Reputation
         d10 = random.randint(1, 10)
         return d10 + self.attributes['COOL'] + self.attributes['REP']
 
     def initiative(self):
-
+        # 97, Rounds & Turn Order
         self.fastdraw = False
         d10 = random.randint(1, 10)
+        # 81, Reflex Boosters
+        # Regarding Sandevistan boosters, this implementation assumes the NPC always subvocalizes
+        # exactly one turn before combat
         try:
             boost = int([item[-1] for item in self.cybernetics if item.startswith('Reflex')][0])
         except IndexError:
             boost = 0
+        # 46, Combat Sense
         if self.role == 'SOLO':
             boost += self.skills['Combat Sense']
         total = d10 + self.attributes['REF'] + boost
-        if total < 11 and (random.random() * 10 <= self.attribute['INT']):
+        # 97, The Fast Draw or Snapshot
+        # Apply if initiative is less than average and NPC is intelligent enough to consider using it
+        if total < 11 and (random.random() * 10 <= self.attributes['INT']):
             self.fastdraw = True
             total += 3
         return total
 
     def damage(self, value, roll, ap=False):
         location = ('', 'Head', 'Torso', 'Torso', 'Torso', 'R. Arm', 'L. Arm', 'R. Leg', 'R. Leg', 'L. Leg', 'L. Leg')[roll]
+        # 102, Armor Piercing Rounds
         if ap:
             value -= int(self.armor[location] / 2)
             value = int(value / 2)
+        # 100-101, Armor
         else:
             value -= self.armor[location]
         if value > 0:
+            # 102, Staged Penetration
             self.armor[location] -= 1
             value -= self.attributes['BTM']
+            # 103, The Body Type Modifier
             if value < 1:
                 value = 1
+            # 103, Special Wound Cases
             if location == 'Head':
                 value *= 2
             self._take_wound(value, roll)
 
-    def _take_wound(self, damage, roll):
-
-        if damage > 8:
+    def _take_wound(self, value, roll):
+        # 103, Special Wound Cases
+        if value > 8:
             if roll == 1:
                 self._death()
             elif roll > 4:
                 self._death_save(0)
-        self.damage += damage
-        if self.samage < 5:
+        self.wounds += value
+        if self.wounds < 5:
+            self.wound_type = 'Light'
             self._stun_save(0)
-        elif 4 < self.damage < 9:
-            if self.wound != 'Serious':
-                self.wound = 'Serious'
+        # 103, Wound Effects
+        elif 4 < self.wounds < 9:
+            if self.wound_type != 'Serious':
+                self.wound_type = 'Serious'
                 self.attributes['REF'] -= 2
             self._stun_save(1)
-        elif 8 < self.damage < 13:
-            if self.wound == 'Serious':
+        elif 8 < self.wounds < 13:
+            # Remove previous effect before applying new one
+            if self.wound_type == 'Serious':
                 self.attributes['REF'] += 2
-            if self.wound != 'Critical':
-                self.wound = 'Critical'
+            if self.wound_type != 'Critical':
+                self.wound_type = 'Critical'
                 for attribute in ('REF', 'INT', 'COOL'):
                     self.attributes[attribute] = round(self.attributes[attribute] / 2)
             self._stun_save(2)
-        elif 12 < self.damage:
-            if self.wound == 'Serious':
+        elif 12 < self.wounds:
+            # Remove previous effect before applying new one
+            if self.wound_type == 'Serious':
                 self.attributes['REF'] += 2
-            elif self.wound == 'Critical':
+            elif self.wound_type == 'Critical':
+                # TODO This incorrectly removes critical wound effects when an attribute is odd
                 for attribute in ('REF', 'INT', 'COOL'):
                     self.attributes[attribute] *= 2
-            if self.wound != 'Mortal':
-                self.wound = 'Mortal'
+            if self.wound_type != 'Mortal':
+                self.wound_type = 'Mortal'
                 for attribute in ('REF', 'INT', 'COOL'):
                     self.attributes[attribute] = round(self.attributes[attribute] / 3)
-            if 12 < self.damage < 17:
+            if 12 < self.wounds < 17:
                 stun, mortal = 3, 0
-            elif 16 < self.damage < 21:
+            elif 16 < self.wounds < 21:
                 stun, mortal = 4, 1
-            elif 20 < self.damage < 25:
+            elif 20 < self.wounds < 25:
                 stun, mortal = 5, 2
-            elif 24 < self.damage < 29:
+            elif 24 < self.wounds < 29:
                 stun, mortal = 6, 3
-            elif 28 < self.damage < 33:
+            elif 28 < self.wounds < 33:
                 stun, mortal = 7, 4
-            elif 32 < self.damage < 37:
+            elif 32 < self.wounds < 37:
                 stun, mortal = 8, 5
-            elif 36 < self.damage < 41:
+            elif 36 < self.wounds < 41:
                 stun, mortal = 9, 6
             else:
                 self._death()
+                return
             self._stun_save(stun)
             self._death_save(mortal)
 
     def _stun_save(self, stun):
-        pass
+        # 29, Save Number; 104, Stun/Shock Saves
+        if random.randint(1, 10) > (self.attributes['BODY'] - stun):
+            self.stunned = True
+            overacting = random.choice(('screams, windmills arms and falls',
+                                       'crumples like a rag doll',
+                                       'spins around in place and falls',
+                                       'clutches their wound, staggers and falls',
+                                       'stares stupidly at their wound then falls',
+                                       'slumps to the ground, moaning'))
+            print(f'The {self.role.lower()} {overacting}.')
+            return
+        if self.stunned:
+            self.stunned = False
+            print(f'This {self.role.lower()} is back in the fight.')
 
     def _death_save(self, mortal):
         pass
 
     def _death(self):
-        return
+        if self.wounds < 41:
+            self.wounds = 41
 
     def _set_cyberware(self):
 
