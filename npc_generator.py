@@ -176,6 +176,9 @@ class Attributes:
         # 29, Body Type Modifier
         self.attributes['BTM'] = (0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 4)[self.attributes['BODY']]
 
+        self.attributes.update({'REFO': self.attributes['REF'], 'INTO': self.attributes['INT'],
+                                'COOLO': self.attributes['COOL']})
+
     def _set_reputation(self):
         # 54-55, Another Kind of Experience: Reputation
         value = round(random.expovariate(0.5)) + 1
@@ -285,9 +288,8 @@ class Character(Skills, Attributes):
             if self.wound_type == 'Serious':
                 self.attributes['REF'] += 2
             elif self.wound_type == 'Critical':
-                # TODO This incorrectly removes critical wound effects when an attribute is odd
                 for attribute in ('REF', 'INT', 'COOL'):
-                    self.attributes[attribute] *= 2
+                    self.attributes[attribute] = self.attributes[f'{attribute}O']
             if self.wound_type != 'Mortal':
                 self.wound_type = 'Mortal'
                 for attribute in ('REF', 'INT', 'COOL'):
@@ -329,7 +331,9 @@ class Character(Skills, Attributes):
             print(f'This {self.role.lower()} is back in the fight.')
 
     def _death_save(self, mortal):
-        pass
+        # 29, Save Number; 104, Very Important: Death Saves
+        if random.randint(1, 10) > (self.attributes['BODY'] - mortal):
+            self._death()
 
     def _death(self):
         if self.wounds < 41:
@@ -488,4 +492,4 @@ weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
                                                'RIF -1 N E 6d6+2(7.62) 35 25 ST'))}
 
 if __name__ == '__main__':
-    Characters(num=30, role='SOLO')
+    Characters(num=3, role='SOLO')
