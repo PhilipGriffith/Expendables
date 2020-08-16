@@ -144,6 +144,13 @@ class Attributes:
             while roll > 10:
                 roll = random.randint(1, 6) + random.randint(1, 6)
             self.roll_list.append(roll)
+
+        if self.ap:
+            while sum(self.roll_list) > self.ap:
+                index = random.choice(range(9))
+                if self.roll_list[index] > 2:
+                    self.roll_list[index] -= 1
+
         self.roll_list.sort()
         return
 
@@ -200,11 +207,12 @@ class Attributes:
 
 class Character(Skills, Attributes):
 
-    def __init__(self, role=None):
+    def __init__(self, role=None, ap=50):
         roles = ('SOLO', 'ROCKER', 'NETRUNNER', 'MEDIA', 'NOMAD', 'FIXER', 'COP', 'CORPORATE', 'TECHIE', 'MEDTECHIE')
         if not role:
             role = random.choice(roles)
         self.role = role.upper()
+        self.ap = ap
         super().__init__()
         self.armor = {}
         self.weapon = None
@@ -474,13 +482,13 @@ class Character(Skills, Attributes):
 
 class FNFF:
 
-    def __init__(self, num=1, role=None):
+    def __init__(self, num=1, role=None, ap=None):
 
         for x in range(num):
             if role:
-                Character(role)
+                Character(role, ap=ap)
             else:
-                Character()
+                Character(ap=ap)
 
 
 weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
@@ -509,4 +517,4 @@ weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
 
 if __name__ == '__main__':
 
-    FNFF(num=50, role='solo')
+    FNFF(num=2, role='fixer', ap=50)
