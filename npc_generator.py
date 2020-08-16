@@ -21,7 +21,7 @@ class Skills:
             if choice == 'Martial Arts':
                 martial_arts = (('Aikido', 3), ('Animal Kung Fu', 3), 'Boxing', ('Capoeria', 3), ('Choi Li Fut', 3),
                                 'Judo', ('Karate', 2), ('Tae Kwon Do', 3), ('Thai Kick Boxing', 4), 'Wrestling')
-                self.career_list.append('{}: {}'.format(choice, random.choice(martial_arts)))
+                self.career_list.append(random.choice(martial_arts))
             else:
                 self.career_list.append(choice)
         elif self.role == 'CORPORATE':
@@ -79,16 +79,19 @@ class Skills:
 
         def point_value_multiplier(ip, total_points):
             # 53, IP Multipliers
-            if total_points == 0:
+            if total_points < ip:
                 return 0, 0
-            points = float('inf')
-            while points > total_points:
-                value = round(random.expovariate(0.3))
-                if value > 9:
-                    value = 9
-                points = range(ip, 41, ip)[value]
-            # Track both skill value and skill points spent to attain that value
-            return value + 1, points
+            elif total_points == ip:
+                return 1, ip
+            else:
+                points = float('inf')
+                while points > total_points:
+                    value = round(random.expovariate(0.3))
+                    if value > 9:
+                        value = 9
+                    points = range(ip, 41, ip)[value]
+                # Track both skill value and the skill points spent to attain that value
+                return value + 1, points
 
         key_skills = {'SOLO': 'Combat Sense', 'CORPORATE': 'Resources', 'MEDIA': 'Credibility', 'NOMAD': 'Family',
                       'TECHIE': 'Jury Rig', 'COP': 'Authority', 'ROCKER': 'Charismatic Leadership',
@@ -111,10 +114,16 @@ class Skills:
             else:
                 self.skills[skill] = total_points
                 total_points = 0
-        # Add remaining skill points to the final random skill
-        # TODO It is possible, though not likely, that the final skill will be > 10
+        # Add remaining skill points to skills with no IP, starting at the top of the skill list
         if total_points > 0:
-            self.skills[self.career_list[-1]] += total_points
+            for skill in self.skills:
+                if not isinstance(skill, tuple):
+                    self.skills[skill] += total_points
+                    if self.skills[skill] > 10:
+                        total_points = self.skills[skill] - 10
+                        self.skills[skill] = 10
+                    else:
+                        break
 
 
 class Attributes:
@@ -150,7 +159,7 @@ class Attributes:
             high = ['ATTR']
         elif self.role == 'FIXER':
             high = ['COOL']
-        elif self.role == 'TECHI':
+        elif self.role == 'TECHIE':
             high = ['TECH']
         else:  # self.role == 'MEDTECHIE' or self.role == 'COP'
             high = []
@@ -207,6 +216,7 @@ class Character(Skills, Attributes):
 
         self._set_cyberware()
         self._set_armor_weapon()
+
         self.report()
 
     def facedown(self):
@@ -236,8 +246,12 @@ class Character(Skills, Attributes):
             total += 3
         return total
 
+    def attack(self):
+        pass
+
     def damage(self, value, roll, ap=False):
-        location = ('', 'Head', 'Torso', 'Torso', 'Torso', 'R. Arm', 'L. Arm', 'R. Leg', 'R. Leg', 'L. Leg', 'L. Leg')[roll]
+        location = ('', 'Head', 'Torso', 'Torso', 'Torso', 'R. Arm', 'L. Arm', 'R. Leg', 'R. Leg', 'L. Leg', 'L. Leg')[
+            roll]
         # 102, Armor Piercing Rounds
         if ap:
             value -= int(self.armor[location] / 2)
@@ -319,16 +333,16 @@ class Character(Skills, Attributes):
         if random.randint(1, 10) > (self.attributes['BODY'] - stun):
             self.stunned = True
             overacting = random.choice(('screams, windmills arms and falls',
-                                       'crumples like a rag doll',
-                                       'spins around in place and falls',
-                                       'clutches their wound, staggers and falls',
-                                       'stares stupidly at their wound then falls',
-                                       'slumps to the ground, moaning'))
+                                        'crumples like a rag doll',
+                                        'spins around in place and falls',
+                                        'clutches their wound, staggers and falls',
+                                        'stares stupidly at their wound then falls',
+                                        'slumps to the ground, moaning'))
             print(f'The {self.role.lower()} {overacting}.')
             return
         if self.stunned:
             self.stunned = False
-            print(f'This {self.role.lower()} is back in the fight.')
+            print(f'The {self.role.lower()} is back in the fight!')
 
     def _death_save(self, mortal):
         # 29, Save Number; 104, Very Important: Death Saves
@@ -338,6 +352,7 @@ class Character(Skills, Attributes):
     def _death(self):
         if self.wounds < 41:
             self.wounds = 41
+        print(f'The {self.role.lower()} is dead.')
 
     def _set_cyberware(self):
 
@@ -401,7 +416,8 @@ class Character(Skills, Attributes):
                   weapons['Hvy Assault Rifle'])
 
         armor = (
-            {'Name': 'Heavy Leather', 'Head': 0, 'Torso': 4, 'R. Arm': 4, 'L. Arm': 4, 'R. Leg': 4, 'L. Leg': 4, 'EV': 0},
+            {'Name': 'Heavy Leather', 'Head': 0, 'Torso': 4, 'R. Arm': 4, 'L. Arm': 4, 'R. Leg': 4, 'L. Leg': 4,
+             'EV': 0},
             {'Name': 'Armor Vest', 'Head': 0, 'Torso': 10, 'R. Arm': 0, 'L. Arm': 0, 'R. Leg': 0, 'L. Leg': 0, 'EV': 0},
             {'Name': 'Light Armor Jacket', 'Head': 0, 'Torso': 14, 'R. Arm': 14, 'L. Arm': 14, 'R. Leg': 0, 'L. Leg': 0,
              'EV': 0},
@@ -420,9 +436,10 @@ class Character(Skills, Attributes):
             {'Name': 'MetalGear', 'Head': 25, 'Torso': 25, 'R. Arm': 25, 'L. Arm': 25, 'R. Leg': 25, 'L. Leg': 25,
              'EV': 2})
 
-        self.armor = armor[roll]
-        self.attributes['REF'] -= self.armor['EV']
         self.weapon = weapon[roll]
+        self.armor = armor[roll]
+        # 67, Body Armor
+        self.attributes['REF'] -= self.armor['EV']
 
     def report(self):
 
@@ -455,7 +472,7 @@ class Character(Skills, Attributes):
         return
 
 
-class Characters(object):
+class FNFF:
 
     def __init__(self, num=1, role=None):
 
@@ -464,7 +481,6 @@ class Characters(object):
                 Character(role)
             else:
                 Character()
-        return
 
 
 weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
@@ -492,4 +508,5 @@ weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
                                                'RIF -1 N E 6d6+2(7.62) 35 25 ST'))}
 
 if __name__ == '__main__':
-    Characters(num=3, role='SOLO')
+
+    FNFF(num=50, role='solo')
