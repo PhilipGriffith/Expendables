@@ -451,27 +451,23 @@ class Character(Skills, Attributes):
 
     def report(self):
 
-        print('Role\n\t{}'.format(self.role.title()))
-        print('Weapon\n\t{}'.format(self.weapon))
-        print('Armor\n\t{}\n\tBTM: -{}\n\tSave: {}'.format(self.armor, self.attributes['BTM'], self.attributes['BODY']))
+        print(f'Role\n\t{self.role.title()}\n\tREP: {self.attributes["REP"]}')
+        print(f'Weapon\n\t{self.weapon}')
+        print(f'Armor\n\t{self.armor["Name"]}\n\t\tHead: {self.armor["Head"]}\t\tTorso: {self.armor["Torso"]}'
+              f'\n\t\tArm: {self.armor["L. Arm"]}\t\tLeg: {self.armor["L. Leg"]}'
+              f'\n\tBTM: -{self.attributes["BTM"]}\n\tSave: {self.attributes["BODY"]}')
         print('Cybernetics')
         for item in self.cybernetics:
             print('\t{}'.format(item))
         print('Attributes')
-        print('\tINT: {}\tREF: {}\tTECH: {}\tCOOL: {}\n\tATTR: {}\tMA: {}\tLUCK: {}\tBODY: {}\n\tEMP: {}'
-              '\t REP: {}\n\tRun: {}\tLeap: {}\tLift: {}'.format(self.attributes['INT'],
-                                                                 self.attributes['REF'],
-                                                                 self.attributes['TECH'],
-                                                                 self.attributes['COOL'],
-                                                                 self.attributes['ATTR'],
-                                                                 self.attributes['MA'],
-                                                                 self.attributes['LUCK'],
-                                                                 self.attributes['BODY'],
-                                                                 self.attributes['EMP'],
-                                                                 self.attributes['REP'],
-                                                                 self.attributes['Run'],
-                                                                 self.attributes['Leap'],
-                                                                 self.attributes['Lift']))
+        attributes = ''
+        for index, key in enumerate(self.attributes):
+            attributes += f'\t{key}: {self.attributes[key]}'
+            if key in ('COOL', 'EMP'):
+                attributes += '\n'
+            if key == 'Lift':
+                break
+        print(attributes)
         print('Skills')
         for k, v in self.skills.items():
             k = k[0] if isinstance(k, tuple) else k
@@ -485,10 +481,7 @@ class FNFF:
     def __init__(self, num=1, role=None, ap=None):
 
         for x in range(num):
-            if role:
-                Character(role, ap=ap)
-            else:
-                Character(ap=ap)
+            Character(role, ap)
 
 
 weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
