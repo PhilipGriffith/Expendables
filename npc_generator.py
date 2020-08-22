@@ -1,5 +1,6 @@
 import math
 import random
+import re
 
 
 class Skills:
@@ -125,6 +126,15 @@ class Skills:
                     else:
                         break
 
+        weapon_skills = ['Brawling', 'Melee', 'Handgun', 'Rifle', 'Submachinegun', 'Aikido', 'Animal Kung Fu', 'Boxing',
+                         'Capoeria', 'Choi Li Fut', 'Judo', 'Karate', 'Tae Kwon Do', 'Thai Kick Boxing', 'Wrestling']
+
+        if self.sp:
+            print(self.skills)
+            for weapon in weapon_skills:
+                if weapon in self.skills and self.skills[weapon] < self.sp:
+                    self.skills[weapon] = self.sp
+
 
 class Attributes:
 
@@ -150,9 +160,12 @@ class Attributes:
                 index = random.choice(range(9))
                 if self.roll_list[index] > 2:
                     self.roll_list[index] -= 1
+            while sum(self.roll_list) < self.ap:
+                index = random.choice(range(9))
+                if self.roll_list[index] < 10:
+                    self.roll_list[index] += 1
 
         self.roll_list.sort()
-        return
 
     def _set_attributes(self):
         # 26, Statistics
@@ -207,12 +220,17 @@ class Attributes:
 
 class Character(Skills, Attributes):
 
-    def __init__(self, role=None, ap=50):
+    def __init__(self, role=None, ap=None, code=None):
         roles = ('SOLO', 'ROCKER', 'NETRUNNER', 'MEDIA', 'NOMAD', 'FIXER', 'COP', 'CORPORATE', 'TECHIE', 'MEDTECHIE')
         if not role:
             role = random.choice(roles)
         self.role = role.upper()
         self.ap = ap
+        self.sp = None
+        self.wa = None
+        self.aa = None
+        if code:
+            self._parse_code(code)
         super().__init__()
         self.armor = {}
         self.weapon = None
@@ -226,6 +244,7 @@ class Character(Skills, Attributes):
         self._set_armor_weapon()
 
         self.report()
+        print(self.ap, self.sp, self.wa, self.aa)
 
     def facedown(self):
         # 55, Another Kind of Experience: Reputation
@@ -278,6 +297,23 @@ class Character(Skills, Attributes):
             if location == 'Head':
                 value *= 2
             self._take_wound(value, roll)
+
+    def _parse_code(self, code):
+        pattern = '([A-E])?([1-5])?([A-E])?'
+        m = re.match(pattern, code.upper())
+        sp = m.group(1)
+        if sp == 'E':
+            self.sp = 2
+        elif sp == 'D':
+            self.sp = 4
+        elif sp == 'C':
+            self.sp = 6
+        elif sp == 'B':
+            self.sp = 8
+        elif sp == 'A':
+            self.sp = 10
+        self.wa = m.group(2)
+        self.aa = m.group(3)
 
     def _take_wound(self, value, roll):
         # 103, Special Wound Cases
@@ -478,10 +514,10 @@ class Character(Skills, Attributes):
 
 class FNFF:
 
-    def __init__(self, num=1, role=None, ap=None):
+    def __init__(self, num=1, role=None, ap=None, code=None):
 
         for x in range(num):
-            Character(role, ap)
+            Character(role, ap, code)
 
 
 weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
@@ -510,4 +546,4 @@ weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
 
 if __name__ == '__main__':
 
-    FNFF(num=2, role='fixer', ap=50)
+    FNFF(num=2, role='solo', ap=None, code='c1C')
