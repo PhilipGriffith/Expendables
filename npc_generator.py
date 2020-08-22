@@ -116,6 +116,7 @@ class Skills:
                 self.skills[skill] = total_points
                 total_points = 0
         # Add remaining skill points to skills with no IP, starting at the top of the skill list
+        # TODO FIX THIS AGAIN
         if total_points > 0:
             for skill in self.skills:
                 if not isinstance(skill, tuple):
@@ -126,14 +127,30 @@ class Skills:
                     else:
                         break
 
-        weapon_skills = ['Brawling', 'Melee', 'Handgun', 'Rifle', 'Submachinegun', 'Aikido', 'Animal Kung Fu', 'Boxing',
-                         'Capoeria', 'Choi Li Fut', 'Judo', 'Karate', 'Tae Kwon Do', 'Thai Kick Boxing', 'Wrestling']
+        weapon_skills = ['Brawling', 'Melee', 'Handgun', 'Rifle', 'Submachinegun', ('Aikido', 3), ('Animal Kung Fu', 3),
+                         'Boxing', ('Capoeria', 3), ('Choi Li Fut', 3), 'Judo', ('Karate', 2), ('Tae Kwon Do', 3),
+                         ('Thai Kick Boxing', 4), 'Wrestling']
 
         if self.sp:
             print(self.skills)
             for weapon in weapon_skills:
-                if weapon in self.skills and self.skills[weapon] < self.sp:
-                    self.skills[weapon] = self.sp
+                sp = self._random_sp()
+                if weapon in self.skills and self.skills[weapon] < sp:
+                    self.skills[weapon] = sp
+
+    def _random_sp(self):
+        sp = None
+        if self.sp == 'E':
+            sp = random.randint(1, 2)
+        elif self.sp == 'D':
+            sp = random.randint(3, 4)
+        elif self.sp == 'C':
+            sp = random.randint(5, 6)
+        elif self.sp == 'B':
+            sp = random.randint(7, 8)
+        elif self.sp == 'A':
+            sp = random.randint(9, 10)
+        return sp
 
 
 class Attributes:
@@ -301,17 +318,7 @@ class Character(Skills, Attributes):
     def _parse_code(self, code):
         pattern = '([A-E])?([1-5])?([A-E])?'
         m = re.match(pattern, code.upper())
-        sp = m.group(1)
-        if sp == 'E':
-            self.sp = 2
-        elif sp == 'D':
-            self.sp = 4
-        elif sp == 'C':
-            self.sp = 6
-        elif sp == 'B':
-            self.sp = 8
-        elif sp == 'A':
-            self.sp = 10
+        self.sp = m.group(1)
         self.wa = m.group(2)
         self.aa = m.group(3)
 
@@ -546,4 +553,4 @@ weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
 
 if __name__ == '__main__':
 
-    FNFF(num=2, role='solo', ap=None, code='c1C')
+    FNFF(num=2, role='solo', ap=None, code='e1C')
