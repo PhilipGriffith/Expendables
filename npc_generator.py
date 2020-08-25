@@ -115,17 +115,12 @@ class Skills:
             else:
                 self.skills[skill] = total_points
                 total_points = 0
-        # Add remaining skill points to skills with no IP, starting at the top of the skill list
-        # TODO FIX THIS AGAIN
-        if total_points > 0:
-            for skill in self.skills:
-                if not isinstance(skill, tuple):
-                    self.skills[skill] += total_points
-                    if self.skills[skill] > 10:
-                        total_points = self.skills[skill] - 10
-                        self.skills[skill] = 10
-                    else:
-                        break
+        # Add remaining skill points to skills with no IP
+        while total_points > 0:
+            skill = random.choice(list(self.skills.keys()))
+            if not isinstance(skill, tuple) and self.skills[skill] < 10:
+                self.skills[skill] += 1
+                total_points -= 1
 
         weapon_skills = ['Brawling', 'Melee', 'Handgun', 'Rifle', 'Submachinegun', ('Aikido', 3), ('Animal Kung Fu', 3),
                          'Boxing', ('Capoeria', 3), ('Choi Li Fut', 3), 'Judo', ('Karate', 2), ('Tae Kwon Do', 3),
@@ -553,4 +548,4 @@ weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
 
 if __name__ == '__main__':
 
-    FNFF(num=2, role='solo', ap=None, code='e1C')
+    FNFF(num=200, role='solo', ap=None, code='a1a')
