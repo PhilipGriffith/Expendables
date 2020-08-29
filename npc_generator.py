@@ -86,6 +86,7 @@ class Skills:
                 return 1, ip
             else:
                 points = float('inf')
+                value = 0
                 while points > total_points:
                     value = round(random.expovariate(0.3))
                     if value > 9:
@@ -127,7 +128,6 @@ class Skills:
                          ('Thai Kick Boxing', 4), 'Wrestling']
 
         if self.sp:
-            print(self.skills)
             for weapon in weapon_skills:
                 sp = self._random_sp()
                 if weapon in self.skills and self.skills[weapon] < sp:
@@ -442,48 +442,58 @@ class Character(Skills, Attributes):
 
     def _set_armor_weapon(self):
 
-        roll = random.randint(0, 9)
+        roll = random.randint(1, 10)
         if self.role == 'NOMAD' or self.role == 'COP':
             roll += 2
         elif self.role == 'SOLO':
             roll += 3
-        if roll > 9:
-            roll = 9
+        if roll > 10:
+            roll = 10
 
-        weapon = (weapons['Knife'],
-                  weapons['Light Pistol'],
-                  weapons['Med Pistol'],
-                  weapons['Hvy Pistol'],
-                  weapons['Hvy Pistol'],
-                  weapons['Light SMG'],
-                  weapons['Light Assault Rifle'],
-                  weapons['Med Assault Rifle'],
-                  weapons['Hvy Assault Rifle'],
-                  weapons['Hvy Assault Rifle'])
+        weapon = (
+            None,
+            weapons['Knife'],
+            weapons['Light Pistol'],
+            weapons['Med Pistol'],
+            weapons['Hvy Pistol'],
+            weapons['Hvy Pistol'],
+            weapons['Light SMG'],
+            weapons['Light Assault Rifle'],
+            weapons['Med Assault Rifle'],
+            weapons['Hvy Assault Rifle'],
+            weapons['Hvy Assault Rifle'])
 
         armor = (
+            {'Name': 'None', 'Head': 0, 'Torso': 0, 'R. Arm': 0, 'L. Arm': 0, 'R. Leg': 0, 'L. Leg': 0,
+             'EV': 0, 'AA': 'E'},
             {'Name': 'Heavy Leather', 'Head': 0, 'Torso': 4, 'R. Arm': 4, 'L. Arm': 4, 'R. Leg': 4, 'L. Leg': 4,
-             'EV': 0},
-            {'Name': 'Armor Vest', 'Head': 0, 'Torso': 10, 'R. Arm': 0, 'L. Arm': 0, 'R. Leg': 0, 'L. Leg': 0, 'EV': 0},
+             'EV': 0, 'AA': 'D'},
+            {'Name': 'Armor Vest', 'Head': 0, 'Torso': 10, 'R. Arm': 0, 'L. Arm': 0, 'R. Leg': 0, 'L. Leg': 0, 'EV': 0,
+             'AA': 'D'},
             {'Name': 'Light Armor Jacket', 'Head': 0, 'Torso': 14, 'R. Arm': 14, 'L. Arm': 14, 'R. Leg': 0, 'L. Leg': 0,
-             'EV': 0},
+             'EV': 0, 'AA': 'C'},
             {'Name': 'Light Armor Jacket', 'Head': 0, 'Torso': 14, 'R. Arm': 14, 'L. Arm': 14, 'R. Leg': 0, 'L. Leg': 0,
-             'EV': 0},
+             'EV': 0, 'AA': 'C'},
             {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'R. Arm': 18, 'L. Arm': 18, 'R. Leg': 0, 'L. Leg': 0,
-             'EV': 1},
+             'EV': 1, 'AA': 'C'},
             {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'R. Arm': 18, 'L. Arm': 18, 'R. Leg': 0, 'L. Leg': 0,
-             'EV': 1},
+             'EV': 1, 'AA': 'C'},
             {'Name': 'Med Armor Jacket', 'Head': 0, 'Torso': 18, 'R. Arm': 18, 'L. Arm': 18, 'R. Leg': 0, 'L. Leg': 0,
-             'EV': 1},
+             'EV': 1, 'AA': 'C'},
             {'Name': 'Hvy Armor Jacket', 'Head': 0, 'Torso': 20, 'R. Arm': 20, 'L. Arm': 20, 'R. Leg': 0, 'L. Leg': 0,
-             'EV': 2},
+             'EV': 2, 'AA': 'C'},
             {'Name': 'Hvy Armor Jacket', 'Head': 0, 'Torso': 20, 'R. Arm': 20, 'L. Arm': 20, 'R. Leg': 0, 'L. Leg': 0,
-             'EV': 2},
+             'EV': 2, 'AA': 'C'},
             {'Name': 'MetalGear', 'Head': 25, 'Torso': 25, 'R. Arm': 25, 'L. Arm': 25, 'R. Leg': 25, 'L. Leg': 25,
-             'EV': 2})
+             'EV': 2, 'AA': 'B'})
 
         self.weapon = weapon[roll]
-        self.armor = armor[roll]
+        if self.aa:
+            while armor[roll]['AA'] < self.aa:
+                roll -= 1
+            self.armor = armor[roll]
+        else:
+            self.armor = armor[roll]
         # 67, Body Armor
         self.attributes['REF'] -= self.armor['EV']
 
@@ -517,7 +527,6 @@ class Character(Skills, Attributes):
 class FNFF:
 
     def __init__(self, num=1, role=None, ap=None, code=None):
-
         for x in range(num):
             Character(role, ap, code)
 
@@ -547,5 +556,4 @@ weapons = {'Knife': 'Knife: Melee 0 P C 1d6 1m AP',
                                                'RIF -1 N E 6d6+2(7.62) 35 25 ST'))}
 
 if __name__ == '__main__':
-
-    FNFF(num=200, role='solo', ap=None, code='a1a')
+    FNFF(num=5, role='solo', ap=50, code='c3c')
